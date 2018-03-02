@@ -1,0 +1,7 @@
+data/blank_effect.tsv
+data/plots/
+data/qc_corrected.tsv
+data/rsdqc.tsv
+data/rt_shifts.tsv
+src/__pycache__/
+src/lib/__pycache__/
