@@ -5,6 +5,7 @@ import os
 import sys
 import fire
 import json
+import pandas as pd
 from subprocess import run, Popen, PIPE
 from src.lib.mea import Mea
 from src.lib.qccalc import Qccalc
@@ -121,7 +122,7 @@ class Qcli(object):
         """ Test all methods of the API with one command"""
 
         # input vars
-        command_prefix = './qcli.py'
+        command_prefix = 'python qcli.py'
         mea_file = './data/combined.tsv'
         blank_effect_file = './data/blank_effect.tsv'
         rt_shifts_file = './data/rt_shifts.tsv'
@@ -132,7 +133,7 @@ class Qcli(object):
         try:
 
             # summary
-            summary_proc = Popen([command_prefix, "summary", "--mea-file={}".format(mea_file)], stdout=PIPE)
+            summary_proc = Popen("{} summary --mea-file={}".format(command_prefix, mea_file), stdout=PIPE, shell=True)
             out, err = summary_proc.communicate(timeout=15)
             summary = json.loads(out.decode('utf8'))
             batches = summary['batches']
@@ -177,7 +178,9 @@ class Qcli(object):
                 ), shell=True, check=True)
 
         except:
-            return False
+            print("Unexpected error:", sys.exc_info()[0])
+            raise
+            # return False
 
         return True
 
