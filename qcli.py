@@ -5,7 +5,8 @@ import os
 import sys
 import fire
 import json
-import pandas as pd
+import time
+import datetime
 from subprocess import run, Popen, PIPE
 from src.lib.mea import Mea
 from src.lib.qccalc import Qccalc
@@ -132,6 +133,11 @@ class Qcli(object):
 
         try:
 
+            # result summary
+            print("Test results ({}):".format(
+                datetime.datetime.fromtimestamp(
+                    time.time()).strftime('%Y-%m-%d %H:%M:%S')))
+
             # summary
             summary_proc = Popen("{} summary --mea-file={}".format(command_prefix, mea_file), stdout=PIPE, shell=True)
             out, err = summary_proc.communicate(timeout=15)
@@ -140,12 +146,18 @@ class Qcli(object):
             samples = summary['samples']
             compounds = summary['compounds']
 
+            print("Found {} batches, {} samples, and {} compounds.".format(
+                len(batches),
+                len(samples),
+                len(compounds)))
+
             # blank effect
             run("{} blank-effect --mea-file={} --blank-effect-file={}".format(
                 command_prefix,
                 mea_file,
                 blank_effect_file
             ), shell=True, check=True)
+            print(" - blank effect passed...")
 
             # rt shifts
             run("{} rt-shifts --mea-file={} --rt-shifts-file={}".format(
@@ -153,6 +165,7 @@ class Qcli(object):
                 mea_file,
                 rt_shifts_file
             ), shell=True, check=True)
+            print(" - rt-shifts passed...")
 
             # qc correction
             run("{} qc-correction --mea-file={} --qc-corrected-file={}".format(
@@ -160,6 +173,7 @@ class Qcli(object):
                 mea_file,
                 qc_corrected_file
             ), shell=True, check=True)
+            print(" - qc-correction passed...")
 
             # qc rsd
             run("{} qc-rsd --qc-corrected-file={} --qc-rsd-file={}".format(
@@ -167,6 +181,7 @@ class Qcli(object):
                 qc_corrected_file,
                 qc_rsd_file
             ), shell=True, check=True)
+            print(" - qc-rsd passed...")
 
             # plot (a limited number of) compounds
             for compound in compounds:
@@ -176,13 +191,11 @@ class Qcli(object):
                     compound,
                     plot_location
                 ), shell=True, check=True)
+                print(" - plot compound {} passed...".format(compound))
 
         except:
             print("Unexpected error:", sys.exc_info()[0])
             raise
-            # return False
-
-        return True
 
 if __name__ == '__main__':
     fire.Fire(Qcli)
