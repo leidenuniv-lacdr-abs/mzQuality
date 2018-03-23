@@ -34,8 +34,8 @@ if True:
     mea.set_measurements(qc_corrected)
     qccalc = Qccalc(mea=mea)
 
-    mea.as_table(column='qc_corrected', include_is=False, location=base_folder + 'qc_intra.tsv')
-    mea.as_table(column='inter_median_qc_corrected', include_is=False, location=base_folder + 'qc_inter.tsv')
+    mea.as_table(column='qc_corrected', location=base_folder + 'qc_intra.tsv', include_is=False)
+    mea.as_table(column='inter_median_qc_corrected', location=base_folder + 'qc_inter.tsv', include_is=False)
     print("QC corrected inter batch data exported")
 
 # calculate RSD_QC's
@@ -52,8 +52,8 @@ if True:
 
 # save sample vs feature
 if True:
-    mea.as_table(column='area', include_is=True, location=base_folder + 'area.tsv')
-    mea.as_table(column='ratio', include_is=False, location=base_folder + 'ratio.tsv')
+    mea.as_table(column='area', location=base_folder + 'area.tsv', include_is=True)
+    mea.as_table(column='ratio', location=base_folder + 'ratio.tsv', include_is=False)
     print("Exported area and ratio")
 
 # plot compounds data

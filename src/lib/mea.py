@@ -140,7 +140,7 @@ class Mea:
         return measurements[measurements['compound'] == compound]
 
     # provide data matrix with samples vs features
-    def as_table(self, column='area', include_is=False, location=''):
+    def as_table(self, column='area', location='', include_is=False):
 
         # init
         sample_feature_lists = {}
