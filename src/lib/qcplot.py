@@ -1,10 +1,7 @@
 import os
-from bokeh.plotting import *
-from bokeh.models import ColumnDataSource
-from bokeh.layouts import gridplot
-from bokeh.plotting import figure, output_file
-from bokeh.models import CustomJS
-from bokeh.models import HoverTool
+import numpy as np
+from plotly.offline import plot
+import plotly.graph_objs as go
 
 # collection of features
 class Qcplot:
@@ -32,361 +29,153 @@ class Qcplot:
         mea = self.get_mea()
         meas = mea.get_compound_data(compound=compound)
 
+        # prepare sets
+        sample_measurements = meas[meas['type'] == 'sample']
+        sample_batch_measurements = sample_measurements.groupby('batch')
+
+        cal_measurements = meas[meas['type'] == 'cal']
+        blank_measurements = meas[meas['type'] == 'blank']
+        qc_measurements = meas[meas['type'] == 'qc']
+
         # prepare location
         try:
             os.mkdir(location)
         except:
             pass
 
-        # init re-usable variables
-        p_width = 1600
-        p_height = 500
-
-        visible_tools = 'hover,pan,wheel_zoom,box_zoom,reset,crosshair,save'
-
-        axis_label = "injection order"
-        axis_line_width = 2
-        major_label_text_color = "black"
-        major_label_orientation = "horizontal"
-        dot_size = 12
-
-        color_map = {
-            1: 'green',
-            2: 'orange',
-            3: 'blue',
-            4: 'yellow',
-            5: 'brown',
-            6: 'pink',
-            7: 'green',
-            8: 'orange',
-            9: 'blue',
-            10: 'yellow',
-            11: 'brown',
-            12: 'pink',
-            13: 'green',
-            14: 'orange',
-            15: 'blue',
-            16: 'yellow',
-            17: 'brown',
-            18: 'pink',
-            19: 'green',
-            20: 'orange',
-            21: 'blue',
-            22: 'yellow',
-            23: 'brown',
-            24: 'pink'
-        }
-
-        color_map_types = {
-            'qc': 'red',
-            'cal': 'cyan',
-            'blank': 'grey',
-            'sample': 'green',
-        }
-
-        # prepare some data
-        html_location = "{}/{}_plot.html".format(location, compound)
-
-        # remove old html
-        if os.path.exists(html_location):
-            os.remove(html_location)
-
-        # set html location
-        output_file(html_location)
-
-        # start first figure, plot the area data
-        fig_area = figure(
-            plot_width=p_width,
-            plot_height=p_height,
-            tools=visible_tools,
-            title=compound
-        )
-
-        fig_area.min_border_top = 120
-
-        for batch in mea.get_batches():
-
-            # filter batch sample data
-            batch_data = meas[(meas['batch'] == batch) & (meas['type'] == 'sample')]
-
-            # add areas to figure
-            fig_name = "fig_area_batch_{}".format(batch)
-            fig_area.circle(
-                source=ColumnDataSource(
-                    data=batch_data
-                ),
-                x='position',
-                y='area',
-                name=fig_name,
-                legend="batch {}".format(batch),
-                color=color_map[batch],
-                size=dot_size
-            )
-
-            # add the tooltips
-            h = HoverTool(names=[fig_name])
-            h.tooltips = [(c, '@' + c) for c in batch_data.columns]
-            h.tooltips.append(('index', '$index'))
-            fig_area.add_tools(h)
-
-        # add qc to figure
-        fig_name = "fig_area_is"
-        fig_area.circle(
-            source=ColumnDataSource(
-                data=meas
+        # plot layout
+        layout = go.Layout(
+            autosize=True,
+            margin=dict(
+                l=50,
+                r=50,
+                b=200,
+                t=50,
+                pad=10
             ),
-            x='position',
-            y='area_is',
-            name=fig_name,
-            legend="Internal Standard",
-            color="black",
-            size=dot_size
+            xaxis=dict(
+                title="QCTool - {}".format(compound),
+                titlefont=dict(
+                    family='Arial, sans-serif',
+                    size=28,
+                    color='grey'
+                ),
+                showticklabels=True,
+                autotick=True,
+                tickangle=90,
+                tickfont=dict(
+                    family='Arial, sans-serif',
+                    size=12,
+                    color='black'
+                )
+            )
         )
 
-        # add the tooltips
-        h = HoverTool(names=[fig_name])
-        h.tooltips = [(c, '@' + c) for c in meas.columns]
-        h.tooltips.append(('index', '$index'))
-        fig_area.add_tools(h)
-
-        for t in mea.get_types():
-            if t != 'sample':
-
-                # get data for this type
-                type_data = meas[meas['type'] == t]
-
-                # add this data type to the figure
-                fig_name = "fig_area_types_{}".format(t)
-                fig_area.circle(
-                    source=ColumnDataSource(
-                        data=type_data
+        updatemenus = list([
+            dict(
+                active=0,
+                buttons=list([
+                    dict(
+                        args=[{'visible': [True, True, True, True, True, True, True, True, False]}],
+                        label='All',
+                        method='update'
                     ),
-                    x='position',
-                    y='area',
-                    name=fig_name,
-                    legend=t,
-                    size=dot_size,
-                    color=color_map_types[t]
+                    dict(
+                        args=[{'visible': [False, True, True, True, True, False, False, False, False]}],
+                        label='Samples',
+                        method='update'
+                    ),
+                    dict(
+                        args=[{'visible': [False, False, False, False, False, False, False, True, False]}],
+                        label='QCs',
+                        method='update'
+                    ),
+                    dict(
+                        args=[{'visible': [False, False, False, False, False, False, False, False, True]}],
+                        label='RT',
+                        method='update'
+                    )
+                ]),
+                direction='down',
+                pad={'r': 10, 't': 5},
+                showactive=True,
+                x=0.1,
+                xanchor='left',
+                y=1.1,
+                yanchor='top'
+            ),
+        ])
+
+        plot_data = []
+
+        # start with adding the median area in all batches
+        plot_data.append(go.Scatter(
+            x=meas['sample'],
+            y=np.zeros(len(meas['sample'])),
+            mode='markers',
+            showlegend=False,
+            marker=dict(
+                size=1,
+                color='rgba(255, 255, 255, 0.0)',
+            )
+        ))
+
+        for batch, batch_sample_mea in sample_batch_measurements:
+            plot_data.append(go.Scatter(
+                    x=batch_sample_mea['sample'],
+                    y=batch_sample_mea['area'],
+                    mode='markers',
+                    marker=dict(size=8),
+                    name="batch {}".format(batch)
+            ))
+
+        plot_data.append(go.Scatter(
+                x=cal_measurements['sample'],
+                y=cal_measurements['area'],
+                mode='markers',
+                name="cals",
+                marker=dict(
+                    color='rgba(0, 0, 0, .5)',
                 )
+        ))
 
-                # add the tooltips
-                h = HoverTool(names=[fig_name])
-                h.tooltips = [(c, '@' + c) for c in type_data.columns]
-                h.tooltips.append(('index', '$index'))
-                fig_area.add_tools(h)
+        plot_data.append(go.Scatter(
+                x=blank_measurements['sample'],
+                y=blank_measurements['area'],
+                mode='markers',
+                name="blanks",
+                marker=dict(
+                    color='rgba(255, 255, 0, 1.0)',
+                )
+        ))
 
-        fig_area.xaxis.axis_label = axis_label
-        fig_area.xaxis.axis_line_width = axis_line_width
-        fig_area.yaxis.axis_label = "Area"
-        fig_area.yaxis.major_label_text_color = major_label_text_color
-        fig_area.yaxis.major_label_orientation = major_label_orientation
+        plot_data.append(go.Scatter(
+                x=qc_measurements['sample'],
+                y=qc_measurements['area'],
+                mode='markers',
+                name="qc",
+                marker=dict(
+                    color='rgba(0, 182, 193, .9)'
+                )))
 
+        plot_data.append(go.Scatter(
+                x=meas['sample'],
+                y=meas['rt'],
+                visible=False,
+                mode='markers',
+                name="rt",
+                marker=dict(
+                    color='rgba(0, 0, 0, 1.0)'
+                )))
 
-        # start second figure, plot the ratio data
-        fig_ratio = figure(
-            plot_width=p_width,
-            plot_height=p_height,
-            tools=visible_tools,
-            title=compound
+        layout['updatemenus'] = updatemenus
+
+        fig = dict(data=plot_data, layout=layout)
+
+        plot(fig,
+            filename="{}/{}.html".format(location, compound),
+            auto_open=False,
+            show_link=False,
         )
 
-        for batch in mea.get_batches():
-
-            # filter batch data
-            batch_data = meas[(meas['batch'] == batch) & (meas['type'] == 'sample')]
-
-            # add ratios to figure
-            fig_name = "fig_ratio_batch_{}".format(batch)
-            fig_ratio.circle(
-                source=ColumnDataSource(
-                    data=batch_data
-                ),
-                x='position',
-                y='ratio',
-                name=fig_name,
-                legend="batch {}".format(batch),
-                size=dot_size,
-                color=color_map[batch]
-            )
-
-            # add the tooltips
-            h = HoverTool(names=[fig_name])
-            h.tooltips = [(c, '@' + c) for c in batch_data.columns]
-            h.tooltips.append(('index', '$index'))
-            fig_ratio.add_tools(h)
-
-        for t in mea.get_types():
-            if t != 'sample':
-
-                # get data for this type
-                type_data = meas[meas['type'] == t]
-
-                # add this data type to the figure
-                fig_name = "fig_ratio_types_{}".format(t)
-                fig_ratio.circle(
-                    source=ColumnDataSource(
-                        data=type_data
-                    ),
-                    x='position',
-                    y='ratio',
-                    name=fig_name,
-                    legend=t,
-                    size=dot_size,
-                    color=color_map_types[t]
-                )
-
-                # add the tooltips
-                h = HoverTool(names=[fig_name])
-                h.tooltips = [(c, '@' + c) for c in type_data.columns]
-                h.tooltips.append(('index', '$index'))
-                fig_ratio.add_tools(h)
-
-        fig_ratio.xaxis.axis_label = axis_label
-        fig_ratio.xaxis.axis_line_width = axis_line_width
-        fig_ratio.yaxis.axis_label = "Ratio"
-        fig_ratio.yaxis.major_label_text_color = major_label_text_color
-        fig_ratio.yaxis.major_label_orientation = major_label_orientation
-
-        # start second figure, plot the ratio (qc corrected) data
-        fig_ratio_qc = figure(
-            plot_width=p_width,
-            plot_height=p_height,
-            tools=visible_tools,
-            title=compound
-        )
-
-        for batch in mea.get_batches():
-
-            # filter batch data
-            batch_data = meas[(meas['batch'] == batch) & (meas['type'] == 'sample')]
-
-            # add ratios to figure
-            fig_name = "fig_ratio_qc_corrected_batch_{}".format(batch)
-            fig_ratio_qc.circle(
-                source=ColumnDataSource(
-                    data=batch_data
-                ),
-                x='position',
-                y='inter_median_qc_corrected',
-                name=fig_name,
-                legend="batch {}".format(batch),
-                size=dot_size,
-                color=color_map[batch]
-            )
-
-            # add the tooltips
-            h = HoverTool(names=[fig_name])
-            h.tooltips = [(c, '@' + c) for c in batch_data.columns]
-            h.tooltips.append(('index', '$index'))
-            fig_ratio_qc.add_tools(h)
-
-        for t in mea.get_types():
-            if t != 'sample':
-
-                # get data for this type
-                type_data = meas[meas['type'] == t]
-
-                # add this data type to the figure
-                fig_name = "fig_ratio_qc_corrected_types_{}".format(t)
-                fig_ratio_qc.circle(
-                    source=ColumnDataSource(
-                        data=type_data
-                    ),
-                    x='position',
-                    y='inter_median_qc_corrected',
-                    name=fig_name,
-                    legend=t,
-                    size=dot_size,
-                    color=color_map_types[t]
-                )
-
-                # add the tooltips
-                h = HoverTool(names=[fig_name])
-                h.tooltips = [(c, '@' + c) for c in type_data.columns]
-                h.tooltips.append(('index', '$index'))
-                fig_ratio_qc.add_tools(h)
-
-        fig_ratio_qc.xaxis.axis_label = axis_label
-        fig_ratio_qc.xaxis.axis_line_width = axis_line_width
-        fig_ratio_qc.yaxis.axis_label = "Ratio (QC corrected)"
-        fig_ratio_qc.yaxis.major_label_text_color = major_label_text_color
-        fig_ratio_qc.yaxis.major_label_orientation = major_label_orientation
-
-        # start third figure, plot the RT data
-        fig_rt = figure(
-            plot_width=p_width,
-            plot_height=p_height,
-            tools=visible_tools,
-            title=compound)
-
-        for batch in mea.get_batches():
-
-            # filter batch data
-            batch_data = meas[(meas['batch'] == batch) & (meas['type'] == 'sample')]
-
-            fig_name = "fig_rt_batch_{}".format(batch)
-            fig_rt.circle(
-                source=ColumnDataSource(
-                    data=batch_data
-                ),
-                name=fig_name,
-                x='position',
-                y='rt',
-                legend="batch {}".format(batch),
-                size=dot_size,
-                color=color_map[batch]
-            )
-
-            # add the tooltips
-            h = HoverTool(names=[fig_name])
-            h.tooltips = [(c, '@' + c) for c in batch_data.columns]
-            h.tooltips.append(('index', '$index'))
-            fig_rt.add_tools(h)
-
-        for t in mea.get_types():
-            if t != 'sample':
-
-                # get data for this type
-                type_data = meas[meas['type'] == t]
-
-                # add this data type to the figure
-                fig_name = "fig_rt_types_{}".format(t)
-                fig_rt.circle(
-                    source=ColumnDataSource(
-                        data=type_data
-                    ),
-                    x='position',
-                    y='rt',
-                    name=fig_name,
-                    legend=t,
-                    size=dot_size,
-                    color=color_map_types[t]
-                )
-
-
-                # add the tooltips
-                h = HoverTool(names=[fig_name])
-                h.tooltips = [(c, '@' + c) for c in type_data.columns]
-                h.tooltips.append(('index', '$index'))
-                fig_rt.add_tools(h)
-
-
-        fig_rt.xaxis.axis_label = axis_label
-        fig_rt.xaxis.axis_line_width = axis_line_width
-        fig_rt.yaxis.axis_label = "RT"
-        fig_rt.yaxis.major_label_text_color = major_label_text_color
-        fig_rt.yaxis.major_label_orientation = major_label_orientation
-
-
-        # show the different plots
-        save(gridplot([fig_area], [fig_ratio], [fig_ratio_qc], [fig_rt]))
-
-        callback = CustomJS(code="""
-            var tooltips = document.getElementsByClassName("bk-tooltip");
-            for (var i = 0, len = tooltips.length; i < len; i ++) {
-                tooltips[i].style.top = ""; // unset what bokeh.js sets
-                tooltips[i].style.left = "";
-                tooltips[i].style.bottom = "0px";
-                tooltips[i].style.left = "0px";
-            }
-            """)
+        return True
