@@ -33,6 +33,7 @@ class Qccalc:
         blank_effect['compound'] = []
         blank_effect['batch'] = []
         blank_effect['be'] = []
+        blank_effect['be_perc'] = []
 
         # Do batch specific calculations
         for batch in mea.get_batches():
@@ -52,12 +53,14 @@ class Qccalc:
                 # get compound blank
                 compound_blanks_index = compound_index[compound_index['type'] == 'blank']
                 # calculate blank effect
-                be_compound = (100 * (compound_blanks_index['area'].mean() / compound_samples_index['area'].mean()))
+                be_compound = compound_blanks_index['area'].median() / compound_samples_index['area'].median()
+                be_compound_perc = (100 * (compound_blanks_index['area'].median() / compound_samples_index['area'].median()))
 
                 # add the columns to the final data frame
                 blank_effect['compound'].append(compound)
                 blank_effect['batch'].append(batch)
                 blank_effect['be'].append(be_compound)
+                blank_effect['be_perc'].append(be_compound_perc)
 
         return pd.DataFrame(blank_effect)
 

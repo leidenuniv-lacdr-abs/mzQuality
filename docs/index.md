@@ -7,4 +7,4 @@ For more background information, please read the following publication: [Analyti
 ## Getting started
 
 ## How to contribute
-If you have contributions please send a pull-request with the correctiong or improvement, and notify one of the developers to review it.
+If you have contributions please send a PR ([pull request](https://help.github.com/articles/about-pull-requests/)) with the correction(s) or improvement(s), and notify one of the developers to review it.
