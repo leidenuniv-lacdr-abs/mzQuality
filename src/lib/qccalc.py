@@ -77,8 +77,10 @@ class Qccalc:
         # compound calculations
         for compound in measurements['compound'].unique():
 
-            compound_index = (measurements['compound'] == compound)
-            compound_qc_index = (measurements['compound'] == compound) & (measurements['type'] == 'qc') & (measurements['ratio'] > 0)
+            compound_qc_index = \
+                (measurements['compound'] == compound) & \
+                (measurements['type'] == 'qc') & \
+                (measurements['ratio'] > 0)
 
             # inter batch qc ratio median
             compound_qc_ratio_median = measurements[compound_qc_index]['ratio'].median()
@@ -86,8 +88,15 @@ class Qccalc:
             # first do intra batch qc corrections
             for batch in measurements['batch'].unique():
 
-                compound_batch_index = (measurements['batch'] == batch) & (measurements['compound'] == compound)
-                compound_qc_batch_index = (measurements['batch'] == batch) & (measurements['compound'] == compound) & (measurements['type'] == 'qc')
+                compound_batch_index = \
+                    (measurements['batch'] == batch) & \
+                    (measurements['compound'] == compound)
+
+                compound_qc_batch_index = \
+                    (measurements['batch'] == batch) & \
+                    (measurements['compound'] == compound) & \
+                    (measurements['type'] == 'qc') & \
+                    (measurements['ratio'] > 0)
 
                 # use median to level/scale ratio
                 med_ratio = measurements[compound_qc_batch_index]['ratio'].median()
