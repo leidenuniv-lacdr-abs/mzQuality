@@ -150,11 +150,6 @@ class Qcli(object):
         export_ratio_location = './data/ratio.tsv'
         export_ratio_is = False
 
-        export_qc_intra_file = qc_corrected_file
-        export_qc_intra_column = 'qc_corrected'
-        export_qc_intra_location = './data/qc_intra.tsv'
-        export_qc_intra_is = False
-
         export_qc_inter_file = qc_corrected_file
         export_qc_inter_column = 'inter_median_qc_corrected'
         export_qc_inter_location = './data/qc_inter.tsv'
@@ -220,14 +215,7 @@ class Qcli(object):
             ), shell=True, check=True)
             print(" - export ratio's passed...")
 
-            # export_measurements (qc_intra)
-            run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
-                command_prefix,
-                export_qc_intra_file, export_qc_intra_column, export_qc_intra_location, export_qc_intra_is
-            ), shell=True, check=True)
-            print(" - export qc_intra passed...")
-
-            # export_measurements (qc_inter)
+            # export_measurements (qc_corrected)
             run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
                 command_prefix,
                 export_qc_inter_file, export_qc_inter_column, export_qc_inter_location, export_qc_inter_is
