@@ -53,8 +53,8 @@ class Qccalc:
                 # get compound blank
                 compound_blanks_index = compound_index[compound_index['type'] == 'blank']
                 # calculate blank effect
-                be_compound = compound_blanks_index['area'].median() / compound_samples_index['area'].median()
-                be_compound_perc = (100 * (compound_blanks_index['area'].median() / compound_samples_index['area'].median()))
+                be_compound = compound_blanks_index['area'].mean() / compound_samples_index['area'].median()
+                be_compound_perc = (100 * (compound_blanks_index['area'].mean() / compound_samples_index['area'].median()))
 
                 # add the columns to the final data frame
                 blank_effect['compound'].append(compound)
@@ -90,6 +90,7 @@ class Qccalc:
 
                 compound_batch_index = \
                     (measurements['batch'] == batch) & \
+                    (measurements['type'] == 'sample') & \
                     (measurements['compound'] == compound)
 
                 compound_qc_batch_index = \
