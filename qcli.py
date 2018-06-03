@@ -107,6 +107,21 @@ class Qcli(object):
         # save results to file
         rsdqc.to_csv(qc_rsd_file, sep="\t", index=False, encoding='utf-8')
 
+    def rep_rsd(self, qc_corrected_file, rep_rsd_file):
+        """ Calculate the Replicate RSD's ... """
+
+        # load measurements file
+        mea = Mea(qc_corrected_file)
+
+        # init calc class
+        qccalc = Qccalc(mea=mea)
+
+        # calculate qc rsd's
+        rsdqc = qccalc.rsdrep()
+
+        # save results to file
+        rsdqc.to_csv(rep_rsd_file, sep="\t", index=False, encoding='utf-8')
+
     def plot_compound(self, qc_corrected_file, compound, plot_location):
         """ plot an individual compound """
 
@@ -138,6 +153,7 @@ class Qcli(object):
         rt_shifts_file = './data/rt_shifts.tsv'
         qc_corrected_file = './data/qc_corrected.tsv'
         qc_rsd_file = './data/rsdqc.tsv'
+        rep_rsd_file = './data/rsdrep.tsv'
         plot_location = './data/plots/'
 
         export_area_file = mea_file
@@ -173,63 +189,71 @@ class Qcli(object):
             print("Found {} batches, {} samples, and {} compounds.".format(
                 len(batches), len(samples), len(compounds)))
 
-            # blank effect
-            run("{} blank-effect --mea-file={} --blank-effect-file={}".format(
-                command_prefix,
-                mea_file, blank_effect_file
-            ), shell=True, check=True)
-            print(" - blank effect passed...")
+            # # blank effect
+            # run("{} blank-effect --mea-file={} --blank-effect-file={}".format(
+            #     command_prefix,
+            #     mea_file, blank_effect_file
+            # ), shell=True, check=True)
+            # print(" - blank effect passed...")
+            #
+            # # rt shifts
+            # run("{} rt-shifts --mea-file={} --rt-shifts-file={}".format(
+            #     command_prefix,
+            #     mea_file, rt_shifts_file
+            # ), shell=True, check=True)
+            # print(" - rt-shifts passed...")
+            #
+            # # qc correction
+            # run("{} qc-correction --mea-file={} --qc-corrected-file={}".format(
+            #     command_prefix,
+            #     mea_file, qc_corrected_file
+            # ), shell=True, check=True)
+            # print(" - qc-correction passed...")
+            #
+            # # qc rsd
+            # run("{} qc-rsd --qc-corrected-file={} --qc-rsd-file={}".format(
+            #     command_prefix,
+            #     qc_corrected_file, qc_rsd_file
+            # ), shell=True, check=True)
+            # print(" - qc-rsd passed...")
 
-            # rt shifts
-            run("{} rt-shifts --mea-file={} --rt-shifts-file={}".format(
+            # rep rsd
+            run("{} rep-rsd --qc-corrected-file={} --rep-rsd-file={}".format(
                 command_prefix,
-                mea_file, rt_shifts_file
+                qc_corrected_file, rep_rsd_file
             ), shell=True, check=True)
-            print(" - rt-shifts passed...")
+            print(" - rep-rsd passed...")
 
-            # qc correction
-            run("{} qc-correction --mea-file={} --qc-corrected-file={}".format(
-                command_prefix,
-                mea_file, qc_corrected_file
-            ), shell=True, check=True)
-            print(" - qc-correction passed...")
-
-            # qc rsd
-            run("{} qc-rsd --qc-corrected-file={} --qc-rsd-file={}".format(
-                command_prefix,
-                qc_corrected_file, qc_rsd_file
-            ), shell=True, check=True)
-            print(" - qc-rsd passed...")
-
-            # export_measurements (area)
-            run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
-                command_prefix,
-                export_area_file, export_area_column, export_area_location, export_area_is
-            ), shell=True, check=True)
-            print(" - export area's passed...")
-
-            # export_measurements (ratio)
-            run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
-                command_prefix,
-                export_ratio_file, export_ratio_column, export_ratio_location, export_ratio_is
-            ), shell=True, check=True)
-            print(" - export ratio's passed...")
-
-            # export_measurements (qc_corrected)
-            run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
-                command_prefix,
-                export_qc_inter_file, export_qc_inter_column, export_qc_inter_location, export_qc_inter_is
-            ), shell=True, check=True)
-            print(" - export qc_inter passed...")
-
-            # plot (a limited number of) compounds
-            print(" + plot compounds:")
-            for compound in compounds:
-                run("{} plot_compound --qc-corrected-file={} --compound={} --plot-location={}".format(
-                    command_prefix,
-                    qc_corrected_file, compound, plot_location
-                ), shell=True, check=True)
-                print("  - plot compound {} passed...".format(compound))
+            #
+            # # export_measurements (area)
+            # run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
+            #     command_prefix,
+            #     export_area_file, export_area_column, export_area_location, export_area_is
+            # ), shell=True, check=True)
+            # print(" - export area's passed...")
+            #
+            # # export_measurements (ratio)
+            # run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
+            #     command_prefix,
+            #     export_ratio_file, export_ratio_column, export_ratio_location, export_ratio_is
+            # ), shell=True, check=True)
+            # print(" - export ratio's passed...")
+            #
+            # # export_measurements (qc_corrected)
+            # run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
+            #     command_prefix,
+            #     export_qc_inter_file, export_qc_inter_column, export_qc_inter_location, export_qc_inter_is
+            # ), shell=True, check=True)
+            # print(" - export qc_inter passed...")
+            #
+            # # plot (a limited number of) compounds
+            # print(" + plot compounds:")
+            # for compound in compounds:
+            #     run("{} plot_compound --qc-corrected-file={} --compound={} --plot-location={}".format(
+            #         command_prefix,
+            #         qc_corrected_file, compound, plot_location
+            #     ), shell=True, check=True)
+            #     print("  - plot compound {} passed...".format(compound))
 
         except:
             print("Unexpected error:", sys.exc_info()[0])

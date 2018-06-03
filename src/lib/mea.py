@@ -34,13 +34,6 @@ class Mea:
             # read raw file
             self.measurements = pd.read_csv(mea_file, sep="\t")
 
-            # drop columns
-            columns_to_drop = ['EOL']
-            columns = self.measurements.columns.tolist()
-            for column_to_drop in columns_to_drop:
-                if str(column_to_drop) in columns:
-                    self.measurements = self.measurements.drop(str(column_to_drop), 1)
-
             # correct some fields
             self.measurements['compound'] = self.measurements['compound'].apply(lambda name: self.fix_compound_name(name))
 
@@ -81,6 +74,14 @@ class Mea:
     # set measurements as Pandas DataFrame
     def set_measurements(self, measurements):
         self.measurements = measurements
+
+    # get measurements of samples measured in replicate
+    def get_replicate_measurements(self, drop_na=True):
+
+        measurements = self.get_measurements(drop_na=drop_na)
+        replicate_samples = measurements[measurements['replicate'].isin(['', 'a']) == False]['sample'].unique()
+
+        return measurements[measurements['sample'].isin(replicate_samples) == True]
 
     # get the unique types of all measurements
     def get_types(self):
@@ -123,19 +124,19 @@ class Mea:
         return measurements['sample'].unique()
 
     # get the data of a batch
-    def get_batch_data(self, batch):
+    def get_batch_data(self, batch, drop_na=True):
 
-        measurements = self.get_measurements()
+        measurements = self.get_measurements(drop_na=drop_na)
 
         return measurements[measurements['batch'] == batch]
 
     # get the compound data
-    def get_compound_data(self, compound, batch=False):
+    def get_compound_data(self, compound, batch=False, drop_na=True):
 
-        if batch != False:
-            measurements = self.get_batch_data(batch=batch)
+        if batch:
+            measurements = self.get_measurements(drop_na=drop_na)
         else:
-            measurements = self.get_measurements()
+            measurements = self.get_batch_data(batch=batch, drop_na=drop_na)
 
         return measurements[measurements['compound'] == compound]
 

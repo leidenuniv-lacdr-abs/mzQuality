@@ -110,6 +110,41 @@ class Qccalc:
 
         return measurements
 
+    def rsdrep(self):
+
+        rsdrep = {}
+        rsdrep['compound'] = []
+        rsdrep['batch'] = []
+        rsdrep['sample'] = []
+        rsdrep['rsdrep_nc'] = []
+        rsdrep['rsdrep_is_corrected'] = []
+        rsdrep['rsdrep_inter_median_qc_corrected'] = []
+
+        mea = self.get_mea()
+        measurements = mea.get_replicate_measurements()
+        measurements = measurements[measurements['type'] == 'sample']
+
+        # check if there are any samples to use
+        if len(measurements) <= 0:
+            return pd.DataFrame()  # return an empty dataframe
+
+        for gbkeys, sample_data in measurements.groupby(['compound', 'batch', 'sample']):
+
+            if len(sample_data) >= 1:
+                print(sample_data)
+                rsdrep_nc = 100 * (sample_data['area'].std() / sample_data['area'].mean())
+                rsdrep_is_corrected = 100 * (sample_data['ratio'].std() / sample_data['ratio'].mean())
+                rsdrep_inter_median_qc_corrected = 100 * (sample_data['inter_median_qc_corrected'].std() / sample_data['inter_median_qc_corrected'].mean())
+
+                rsdrep['compound'].append(gbkeys[0])
+                rsdrep['batch'].append(gbkeys[1])
+                rsdrep['sample'].append(gbkeys[2])
+                rsdrep['rsdrep_nc'].append(rsdrep_nc)
+                rsdrep['rsdrep_is_corrected'].append(round(rsdrep_is_corrected, 2))
+                rsdrep['rsdrep_inter_median_qc_corrected'].append(round(rsdrep_inter_median_qc_corrected, 2))
+
+        return pd.DataFrame(rsdrep)
+
     def rsdqc(self):
 
         rsdqc = {}
