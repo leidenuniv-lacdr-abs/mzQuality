@@ -131,7 +131,6 @@ class Qccalc:
         for gbkeys, sample_data in measurements.groupby(['compound', 'batch', 'sample']):
 
             if len(sample_data) >= 1:
-                print(sample_data)
                 rsdrep_nc = 100 * (sample_data['area'].std() / sample_data['area'].mean())
                 rsdrep_is_corrected = 100 * (sample_data['ratio'].std() / sample_data['ratio'].mean())
                 rsdrep_inter_median_qc_corrected = 100 * (sample_data['inter_median_qc_corrected'].std() / sample_data['inter_median_qc_corrected'].mean())
