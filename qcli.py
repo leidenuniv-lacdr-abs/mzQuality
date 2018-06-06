@@ -92,7 +92,7 @@ class Qcli(object):
         # save results to file
         qc_corrected.to_csv(qc_corrected_file, sep="\t", index=False, encoding='utf-8')
 
-    def qc_rsd(self, qc_corrected_file, qc_rsd_file):
+    def qc_rsd(self, qc_corrected_file, qc_rsd_file, by_batch=False):
         """ Calculate the QC RSD's ... """
 
         # load measurements file
@@ -102,12 +102,12 @@ class Qcli(object):
         qccalc = Qccalc(mea=mea)
 
         # calculate qc rsd's
-        rsdqc = qccalc.rsdqc()
+        rsdqc = qccalc.rsdqc(by_batch=by_batch)
 
         # save results to file
         rsdqc.to_csv(qc_rsd_file, sep="\t", index=False, encoding='utf-8')
 
-    def rep_rsd(self, qc_corrected_file, rep_rsd_file):
+    def rep_rsd(self, qc_corrected_file, rep_rsd_file, by_batch=False):
         """ Calculate the Replicate RSD's ... """
 
         # load measurements file
@@ -117,7 +117,7 @@ class Qcli(object):
         qccalc = Qccalc(mea=mea)
 
         # calculate qc rsd's
-        rsdqc = qccalc.rsdrep()
+        rsdqc = qccalc.rsdrep(by_batch=by_batch)
 
         # save results to file
         rsdqc.to_csv(rep_rsd_file, sep="\t", index=False, encoding='utf-8')
@@ -153,7 +153,9 @@ class Qcli(object):
         rt_shifts_file = './data/rt_shifts.tsv'
         qc_corrected_file = './data/qc_corrected.tsv'
         qc_rsd_file = './data/rsdqc.tsv'
+        batch_qc_rsd_file = './data/batch_rsdqc.tsv'
         rep_rsd_file = './data/rsdrep.tsv'
+        batch_rep_rsd_file = './data/batch_rsdrep.tsv'
         plot_location = './data/plots/'
 
         export_area_file = mea_file
@@ -217,6 +219,12 @@ class Qcli(object):
             ), shell=True, check=True)
             print(" - qc-rsd passed...")
 
+            run("{} qc-rsd --qc-corrected-file={} --qc-rsd-file={} --by-batch={}".format(
+                command_prefix,
+                qc_corrected_file, batch_qc_rsd_file, True
+            ), shell=True, check=True)
+            print(" - qc-rsd by batch passed...")
+
             # rep rsd
             run("{} rep-rsd --qc-corrected-file={} --rep-rsd-file={}".format(
                 command_prefix,
@@ -224,6 +232,11 @@ class Qcli(object):
             ), shell=True, check=True)
             print(" - rep-rsd passed...")
 
+            run("{} rep-rsd --qc-corrected-file={} --rep-rsd-file={} --by-batch={}".format(
+                command_prefix,
+                qc_corrected_file, batch_rep_rsd_file, True
+            ), shell=True, check=True)
+            print(" - rep-rsd passed...")
 
             # export_measurements (area)
             run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(

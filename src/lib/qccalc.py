@@ -90,7 +90,6 @@ class Qccalc:
 
                 compound_batch_index = \
                     (measurements['batch'] == batch) & \
-                    (measurements['type'] == 'sample') & \
                     (measurements['compound'] == compound)
 
                 compound_qc_batch_index = \
@@ -110,7 +109,7 @@ class Qccalc:
 
         return measurements
 
-    def rsdrep(self):
+    def rsdrep(self, by_batch=False):
 
         rsdrep = {}
         rsdrep['compound'] = []
@@ -142,9 +141,17 @@ class Qccalc:
                 rsdrep['rsdrep_is_corrected'].append(round(rsdrep_is_corrected, 2))
                 rsdrep['rsdrep_inter_median_qc_corrected'].append(round(rsdrep_inter_median_qc_corrected, 2))
 
-        return pd.DataFrame(rsdrep)
+        # take the mean of each compound te report
+        if by_batch:
+            rsdrep_df = pd.DataFrame(rsdrep).groupby(['compound', 'batch'], as_index=False).mean()
+            rsdrep_df = rsdrep_df[['compound', 'batch', 'rsdrep_inter_median_qc_corrected', 'rsdrep_is_corrected', 'rsdrep_nc']]
+        else:
+            rsdrep_df = pd.DataFrame(rsdrep).groupby(['compound'], as_index=False).mean()
+            rsdrep_df = rsdrep_df[['compound', 'rsdrep_inter_median_qc_corrected', 'rsdrep_is_corrected', 'rsdrep_nc']]
 
-    def rsdqc(self):
+        return rsdrep_df.round(decimals=2)
+
+    def rsdqc(self, by_batch=False):
 
         rsdqc = {}
         rsdqc['compound'] = []
@@ -169,6 +176,7 @@ class Qccalc:
                 ]
 
                 if len(compound_batch_qc) >= 1:
+
                     rsdqc_nc = 100 * (compound_batch_qc['area'].std() / compound_batch_qc['area'].mean())
                     rsdqc_is_corrected = 100 * (compound_batch_qc['ratio'].std() / compound_batch_qc['ratio'].mean())
                     rsdqc_inter_median_qc_corrected = 100 * (compound_batch_qc['inter_median_qc_corrected'].std() / compound_batch_qc['inter_median_qc_corrected'].mean())
@@ -179,7 +187,13 @@ class Qccalc:
                     rsdqc['rsdqc_is_corrected'].append(round(rsdqc_is_corrected, 2))
                     rsdqc['rsdqc_inter_median_qc_corrected'].append(round(rsdqc_inter_median_qc_corrected, 2))
 
-        return pd.DataFrame(rsdqc)
+        rsdqc_df = pd.DataFrame(rsdqc)
+
+        if not by_batch:
+            rsdqc_df = rsdqc_df.groupby(['compound'], as_index=False).mean()
+            rsdqc_df = rsdqc_df[['compound', 'rsdqc_nc', 'rsdqc_is_corrected', 'rsdqc_inter_median_qc_corrected']]
+
+        return rsdqc_df.round(decimals=2)
 
     def rt_shifts(self):
 

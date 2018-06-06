@@ -79,7 +79,7 @@ class Mea:
     def get_replicate_measurements(self, drop_na=True):
 
         measurements = self.get_measurements(drop_na=drop_na)
-        replicate_samples = measurements[measurements['replicate'].isin(['', 'a']) == False]['sample'].unique()
+        replicate_samples = measurements[measurements['replicate'].isin(['', '-', '_', 'a']) == False]['sample'].unique()
 
         return measurements[measurements['sample'].isin(replicate_samples) == True]
 
