@@ -236,7 +236,7 @@ class Qcli(object):
                 command_prefix,
                 qc_corrected_file, batch_rep_rsd_file, True
             ), shell=True, check=True)
-            print(" - rep-rsd passed...")
+            print(" - rep-rsd by batch passed...")
 
             # export_measurements (area)
             run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
