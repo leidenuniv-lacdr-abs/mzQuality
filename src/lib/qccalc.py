@@ -115,6 +115,7 @@ class Qccalc:
         rsdrep['compound'] = []
         rsdrep['batch'] = []
         rsdrep['sample'] = []
+        rsdrep['injection'] = []
         rsdrep['rsdrep_nc'] = []
         rsdrep['rsdrep_is_corrected'] = []
         rsdrep['rsdrep_inter_median_qc_corrected'] = []
@@ -127,7 +128,7 @@ class Qccalc:
         if len(measurements) <= 0:
             return pd.DataFrame()  # return an empty dataframe
 
-        for gbkeys, sample_data in measurements.groupby(['compound', 'batch', 'sample']):
+        for gbkeys, sample_data in measurements.groupby(['compound', 'batch', 'sample', 'injection']):
 
             if len(sample_data) >= 1:
                 rsdrep_nc = 100 * (sample_data['area'].std() / sample_data['area'].mean())
@@ -137,6 +138,7 @@ class Qccalc:
                 rsdrep['compound'].append(gbkeys[0])
                 rsdrep['batch'].append(gbkeys[1])
                 rsdrep['sample'].append(gbkeys[2])
+                rsdrep['injection'].append(gbkeys[3])
                 rsdrep['rsdrep_nc'].append(rsdrep_nc)
                 rsdrep['rsdrep_is_corrected'].append(round(rsdrep_is_corrected, 2))
                 rsdrep['rsdrep_inter_median_qc_corrected'].append(round(rsdrep_inter_median_qc_corrected, 2))
@@ -168,30 +170,45 @@ class Qccalc:
             return pd.DataFrame()  # return an empty dataframe
 
         for compound in mea.get_compounds():
-            for batch in mea.get_batches():
-                compound_batch_qc = measurements[
-                    (measurements['batch'] == batch) &
+            if by_batch:
+                for batch in mea.get_batches():
+                    compound_batch_qc = measurements[
+                        (measurements['batch'] == batch) &
+                        (measurements['type'] == 'qc') &
+                        (measurements['compound'] == compound)
+                    ]
+
+                    if len(compound_batch_qc) >= 1:
+
+                        rsdqc_nc = 100 * (compound_batch_qc['area'].std() / compound_batch_qc['area'].mean())
+                        rsdqc_is_corrected = 100 * (compound_batch_qc['ratio'].std() / compound_batch_qc['ratio'].mean())
+                        rsdqc_inter_median_qc_corrected = 100 * (compound_batch_qc['inter_median_qc_corrected'].std() / compound_batch_qc['inter_median_qc_corrected'].mean())
+
+                        rsdqc['compound'].append(compound)
+                        rsdqc['batch'].append(batch)
+                        rsdqc['rsdqc_nc'].append(rsdqc_nc)
+                        rsdqc['rsdqc_is_corrected'].append(rsdqc_is_corrected)
+                        rsdqc['rsdqc_inter_median_qc_corrected'].append(rsdqc_inter_median_qc_corrected)
+            else:
+                rsdqc.pop('batch', None)
+                compound_qc = measurements[
                     (measurements['type'] == 'qc') &
                     (measurements['compound'] == compound)
-                ]
+                    ]
 
-                if len(compound_batch_qc) >= 1:
+                compound_qc.to_csv("/Users/vlietmsvan/Desktop/{}.tsv".format(compound), sep="\t")
 
-                    rsdqc_nc = 100 * (compound_batch_qc['area'].std() / compound_batch_qc['area'].mean())
-                    rsdqc_is_corrected = 100 * (compound_batch_qc['ratio'].std() / compound_batch_qc['ratio'].mean())
-                    rsdqc_inter_median_qc_corrected = 100 * (compound_batch_qc['inter_median_qc_corrected'].std() / compound_batch_qc['inter_median_qc_corrected'].mean())
+                if len(compound_qc) >= 1:
+                    rsdqc_nc = 100 * (compound_qc['area'].std() / compound_qc['area'].mean())
+                    rsdqc_is_corrected = 100 * (compound_qc['ratio'].std() / compound_qc['ratio'].mean())
+                    rsdqc_inter_median_qc_corrected = 100 * (compound_qc['inter_median_qc_corrected'].std() / compound_qc['inter_median_qc_corrected'].mean())
 
                     rsdqc['compound'].append(compound)
-                    rsdqc['batch'].append(batch)
                     rsdqc['rsdqc_nc'].append(rsdqc_nc)
                     rsdqc['rsdqc_is_corrected'].append(round(rsdqc_is_corrected, 2))
                     rsdqc['rsdqc_inter_median_qc_corrected'].append(round(rsdqc_inter_median_qc_corrected, 2))
 
         rsdqc_df = pd.DataFrame(rsdqc)
-
-        if not by_batch:
-            rsdqc_df = rsdqc_df.groupby(['compound'], as_index=False).mean()
-            rsdqc_df = rsdqc_df[['compound', 'rsdqc_nc', 'rsdqc_is_corrected', 'rsdqc_inter_median_qc_corrected']]
 
         return rsdqc_df.round(decimals=2)
 
