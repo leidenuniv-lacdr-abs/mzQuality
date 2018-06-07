@@ -196,8 +196,6 @@ class Qccalc:
                     (measurements['compound'] == compound)
                     ]
 
-                compound_qc.to_csv("/Users/vlietmsvan/Desktop/{}.tsv".format(compound), sep="\t")
-
                 if len(compound_qc) >= 1:
                     rsdqc_nc = 100 * (compound_qc['area'].std() / compound_qc['area'].mean())
                     rsdqc_is_corrected = 100 * (compound_qc['ratio'].std() / compound_qc['ratio'].mean())
