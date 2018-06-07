@@ -23,7 +23,8 @@ class Qcli(object):
         - blank_effect
         - rt_shifts
         - qc_correction
-        - rsdqc
+        - rsd qc
+        - rsd replicates
         - plot compound information
         - export results as samples vs. compounds
     """
@@ -117,16 +118,16 @@ class Qcli(object):
         qccalc = Qccalc(mea=mea)
 
         # calculate qc rsd's
-        rsdqc = qccalc.rsdrep(by_batch=by_batch)
+        rsdrep = qccalc.rsdrep(by_batch=by_batch)
 
         # save results to file
-        rsdqc.to_csv(rep_rsd_file, sep="\t", index=False, encoding='utf-8')
+        rsdrep.to_csv(rep_rsd_file, sep="\t", index=False, encoding='utf-8')
 
     def plot_compound(self, qc_corrected_file, compound, plot_location):
         """ plot an individual compound """
 
         # load measurements file
-        mea = Mea(qc_corrected_file)
+        mea = Mea(mea_file=qc_corrected_file)
 
         # init plot class
         qcplot = Qcplot(mea=mea)

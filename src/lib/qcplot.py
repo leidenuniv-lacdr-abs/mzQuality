@@ -76,22 +76,22 @@ class Qcplot:
                 active=0,
                 buttons=list([
                     dict(
-                        args=[{'visible': [True, True, True, True, True, True, True, True, False]}],
+                        args=[{'visible': [True, True, True, True, True, True, True, False]}],
                         label='All',
                         method='update'
                     ),
                     dict(
-                        args=[{'visible': [False, True, True, True, True, False, False, False, False]}],
+                        args=[{'visible': [False, True, True, True, True, False, False, False]}],
                         label='Samples',
                         method='update'
                     ),
                     dict(
-                        args=[{'visible': [False, False, False, False, False, False, False, True, False]}],
+                        args=[{'visible': [False, False, False, False, False, False, True, False]}],
                         label='QCs',
                         method='update'
                     ),
                     dict(
-                        args=[{'visible': [False, False, False, False, False, False, False, False, True]}],
+                        args=[{'visible': [False, False, False, False, False, False, False, True]}],
                         label='RT',
                         method='update'
                     )
@@ -110,7 +110,7 @@ class Qcplot:
 
         # start with adding the median area in all batches
         plot_data.append(go.Scatter(
-            x=meas['sample'],
+            x=meas['position'],
             y=np.zeros(len(meas['sample'])),
             mode='markers',
             showlegend=False,
@@ -122,7 +122,7 @@ class Qcplot:
 
         for batch, batch_sample_mea in sample_batch_measurements:
             plot_data.append(go.Scatter(
-                    x=batch_sample_mea['sample'],
+                    x=batch_sample_mea['position'],
                     y=batch_sample_mea['area'],
                     mode='markers',
                     marker=dict(size=8),
@@ -130,7 +130,7 @@ class Qcplot:
             ))
 
         plot_data.append(go.Scatter(
-                x=cal_measurements['sample'],
+                x=cal_measurements['position'],
                 y=cal_measurements['area'],
                 mode='markers',
                 name="cals",
@@ -140,7 +140,7 @@ class Qcplot:
         ))
 
         plot_data.append(go.Scatter(
-                x=blank_measurements['sample'],
+                x=blank_measurements['position'],
                 y=blank_measurements['area'],
                 mode='markers',
                 name="blanks",
@@ -150,7 +150,7 @@ class Qcplot:
         ))
 
         plot_data.append(go.Scatter(
-                x=qc_measurements['sample'],
+                x=qc_measurements['position'],
                 y=qc_measurements['area'],
                 mode='markers',
                 name="qc",
@@ -159,7 +159,7 @@ class Qcplot:
                 )))
 
         plot_data.append(go.Scatter(
-                x=meas['sample'],
+                x=meas['position'],
                 y=meas['rt'],
                 visible=False,
                 mode='markers',

@@ -57,6 +57,7 @@ class Mea:
             self.measurements.sort_values(
                 ['batch', 'order'], ascending=[True, True], inplace=True
             )
+
             self.measurements.reset_index()
             self.measurements['position'] = self.measurements.index + 1
 
@@ -134,9 +135,9 @@ class Mea:
     def get_compound_data(self, compound, batch=False, drop_na=True):
 
         if batch:
-            measurements = self.get_measurements(drop_na=drop_na)
-        else:
             measurements = self.get_batch_data(batch=batch, drop_na=drop_na)
+        else:
+            measurements = self.get_measurements(drop_na=drop_na)
 
         return measurements[measurements['compound'] == compound]
 
