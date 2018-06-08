@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from plotly import tools
 from plotly.offline import plot
 import plotly.graph_objs as go
 
@@ -23,6 +24,7 @@ class Qcplot:
     def get_mea(self):
         return self.mea
 
+
     def plot_compound_qc_data(self, compound=False, location=''):
 
         # load data
@@ -43,139 +45,125 @@ class Qcplot:
         except:
             pass
 
-        # plot layout
-        layout = go.Layout(
-            autosize=True,
-            margin=dict(
-                l=50,
-                r=50,
-                b=200,
-                t=50,
-                pad=10
-            ),
-            xaxis=dict(
-                title="QCTool - {}".format(compound),
-                titlefont=dict(
-                    family='Arial, sans-serif',
-                    size=28,
-                    color='grey'
-                ),
-                showticklabels=True,
-                autotick=True,
-                tickangle=90,
-                tickfont=dict(
-                    family='Arial, sans-serif',
-                    size=12,
-                    color='black'
-                )
-            )
+        row = 1
+        fig = tools.make_subplots(rows=4, cols=1,
+                                  vertical_spacing=0.05,
+                                  print_grid=True,
+                                  shared_xaxes=True,
+                                  shared_yaxes=False,
+                                  subplot_titles=(
+                                      'Area',
+                                      'Internal Standard corrected (ratio)',
+                                      'QC corrected',
+                                      'Retention times'
+                                  )
         )
 
-        updatemenus = list([
-            dict(
-                active=0,
-                buttons=list([
-                    dict(
-                        args=[{'visible': [True, True, True, True, True, True, True, False]}],
-                        label='All',
-                        method='update'
-                    ),
-                    dict(
-                        args=[{'visible': [False, True, True, True, True, False, False, False]}],
-                        label='Samples',
-                        method='update'
-                    ),
-                    dict(
-                        args=[{'visible': [False, False, False, False, False, False, True, False]}],
-                        label='QCs',
-                        method='update'
-                    ),
-                    dict(
-                        args=[{'visible': [False, False, False, False, False, False, False, True]}],
-                        label='RT',
-                        method='update'
-                    )
-                ]),
-                direction='down',
-                pad={'r': 10, 't': 5},
-                showactive=True,
-                x=0.1,
-                xanchor='left',
-                y=1.1,
-                yanchor='top'
-            ),
-        ])
-
-        plot_data = []
+        fig['layout'].update(margin=dict(
+                                r=100,
+                                t=100,
+                                b=300,
+                                l=100),
+                                paper_bgcolor='#e4e4e4',
+                                plot_bgcolor='#ffffff',
+                                autosize=True,
+                                title="mzQuality results {}".format(compound))
 
         # start with adding the median area in all batches
-        plot_data.append(go.Scatter(
-            x=meas['position'],
-            y=np.zeros(len(meas['sample'])),
+        fig.append_trace(go.Scatter(
+            x=meas['aliquot'],
+            y=np.zeros(len(meas['aliquot'])),
             mode='markers',
             showlegend=False,
             marker=dict(
                 size=1,
                 color='rgba(255, 255, 255, 0.0)',
             )
-        ))
+        ), row, 1)
 
         for batch, batch_sample_mea in sample_batch_measurements:
-            plot_data.append(go.Scatter(
-                    x=batch_sample_mea['position'],
+            fig.append_trace(go.Scatter(
+                    x=batch_sample_mea['aliquot'],
                     y=batch_sample_mea['area'],
                     mode='markers',
                     marker=dict(size=8),
                     name="batch {}".format(batch)
-            ))
+            ), row, 1)
 
-        plot_data.append(go.Scatter(
-                x=cal_measurements['position'],
+        fig.append_trace(go.Scatter(
+                x=cal_measurements['aliquot'],
                 y=cal_measurements['area'],
                 mode='markers',
                 name="cals",
+                visible='legendonly',
                 marker=dict(
                     color='rgba(0, 0, 0, .5)',
                 )
-        ))
+        ), row, 1)
 
-        plot_data.append(go.Scatter(
-                x=blank_measurements['position'],
+        fig.append_trace(go.Scatter(
+                x=blank_measurements['aliquot'],
                 y=blank_measurements['area'],
                 mode='markers',
                 name="blanks",
+                visible='legendonly',
                 marker=dict(
                     color='rgba(255, 255, 0, 1.0)',
                 )
-        ))
+        ), row, 1)
 
-        plot_data.append(go.Scatter(
-                x=qc_measurements['position'],
-                y=qc_measurements['area'],
+        fig.append_trace(go.Scatter(
+            x=qc_measurements['aliquot'],
+            y=qc_measurements['area'],
+            mode='markers',
+            name="qc",
+            visible='legendonly',
+            marker=dict(
+                color='rgba(0, 182, 193, .9)'
+            )), row, 1)
+
+        row += 1
+        for batch, batch_sample_mea in sample_batch_measurements:
+            fig.append_trace(go.Scatter(
+                x=batch_sample_mea['aliquot'],
+                y=batch_sample_mea['ratio'],
                 mode='markers',
-                name="qc",
-                marker=dict(
-                    color='rgba(0, 182, 193, .9)'
-                )))
+                marker=dict(size=8),
+                name="ratios batch {}".format(batch)
+            ), row, 1)
 
-        plot_data.append(go.Scatter(
-                x=meas['position'],
-                y=meas['rt'],
-                visible=False,
+        row += 1
+        for batch, batch_sample_mea in sample_batch_measurements:
+            fig.append_trace(go.Scatter(
+                x=batch_sample_mea['aliquot'],
+                y=batch_sample_mea['inter_median_qc_corrected'],
                 mode='markers',
-                name="rt",
-                marker=dict(
-                    color='rgba(0, 0, 0, 1.0)'
-                )))
+                marker=dict(size=8),
+                name="QC corrected batch {}".format(batch)
+            ), row, 1)
 
-        layout['updatemenus'] = updatemenus
+        row += 1
+        fig.append_trace(go.Scatter(
+            x=meas['aliquot'],
+            y=meas['rt'],
+            mode='markers',
+            name="rt",
+            marker=dict(
+                color='rgba(0, 0, 0, 1.0)'
+            )), row, 1)
 
-        fig = dict(data=plot_data, layout=layout)
+        vals = np.empty(len(meas['rt']))
+        vals.fill(meas['rt'].median())
+        fig.append_trace(go.Scatter(
+            x=meas['aliquot'],
+            y=vals,
+            mode='lines',
+            name="median rt",
+            line=dict(
+                color=('rgb(192, 192, 192)'),
+                width=1)
+        ), row, 1)
 
-        plot(fig,
-            filename="{}/{}.html".format(location, compound),
-            auto_open=False,
-            show_link=False,
-        )
+        plot(fig, filename="{}/{}.html".format(location, compound), auto_open=False, show_link=False)
 
         return True
