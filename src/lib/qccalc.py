@@ -24,30 +24,51 @@ class Qccalc:
         return self.mea
 
     # perform blank effect calculations
-    def blank_effect(self):
+    def blank_effect(self, by_batch=False):
 
         mea = self.get_mea()
         measurements = mea.get_measurements()
 
         blank_effect = {}
         blank_effect['compound'] = []
-        blank_effect['batch'] = []
         blank_effect['be'] = []
         blank_effect['be_perc'] = []
 
-        # Do batch specific calculations
-        for batch in mea.get_batches():
+        if by_batch: # blank effect calculations (by batch)
 
-            batch_index = measurements[measurements['batch'] == batch]
+            # add batch column
+            blank_effect['batch'] = []
 
-            # unique batch samples
-            unique_batch_samples = batch_index['sample'].unique()
-            unique_batch_samples.sort()
+            # Do batch specific calculations
+            for batch in mea.get_batches():
 
-            # blank effect calculations
+                batch_index = measurements[measurements['batch'] == batch]
+
+                # unique batch samples
+                unique_batch_samples = batch_index['sample'].unique()
+                unique_batch_samples.sort()
+
+                # blank effect calculations
+                for compound in mea.get_compounds():
+                    # get all data for this compound
+                    compound_index = batch_index[batch_index['compound'] == compound]
+                    # get compound sample
+                    compound_samples_index = compound_index[compound_index['type'] == 'sample']
+                    # get compound blank
+                    compound_blanks_index = compound_index[compound_index['type'] == 'blank']
+                    # calculate blank effect
+                    be_compound = compound_blanks_index['area'].mean() / compound_samples_index['area'].median()
+                    be_compound_perc = (100 * (compound_blanks_index['area'].mean() / compound_samples_index['area'].median()))
+
+                    # add the columns to the final data frame
+                    blank_effect['compound'].append(compound)
+                    blank_effect['batch'].append(batch)
+                    blank_effect['be'].append(be_compound)
+                    blank_effect['be_perc'].append(be_compound_perc)
+        else: # blank effect calculations (all batches)
             for compound in mea.get_compounds():
                 # get all data for this compound
-                compound_index = batch_index[batch_index['compound'] == compound]
+                compound_index = measurements[measurements['compound'] == compound]
                 # get compound sample
                 compound_samples_index = compound_index[compound_index['type'] == 'sample']
                 # get compound blank
@@ -58,7 +79,6 @@ class Qccalc:
 
                 # add the columns to the final data frame
                 blank_effect['compound'].append(compound)
-                blank_effect['batch'].append(batch)
                 blank_effect['be'].append(be_compound)
                 blank_effect['be_perc'].append(be_compound_perc)
 

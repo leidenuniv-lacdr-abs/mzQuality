@@ -48,7 +48,7 @@ class Qcli(object):
         # return a json encoded dict
         return json.JSONEncoder().encode(summary)
 
-    def blank_effect(self, mea_file, blank_effect_file):
+    def blank_effect(self, mea_file, blank_effect_file, by_batch=False):
         """ Calculate the blank effect of ... """
 
         # load measurements file
@@ -58,7 +58,7 @@ class Qcli(object):
         qccalc = Qccalc(mea=mea)
 
         # calculate blank effect
-        blank_effect = qccalc.blank_effect()
+        blank_effect = qccalc.blank_effect(by_batch=by_batch)
 
         # save results to file
         blank_effect.to_csv(blank_effect_file, sep="\t", index=False, encoding='utf-8')
@@ -151,6 +151,7 @@ class Qcli(object):
         command_prefix = 'python qcli.py'
         mea_file = './data/combined.tsv'
         blank_effect_file = './data/blank_effect.tsv'
+        batch_blank_effect_file = './data/batch_blank_effect.tsv'
         rt_shifts_file = './data/rt_shifts.tsv'
         qc_corrected_file = './data/qc_corrected.tsv'
         qc_rsd_file = './data/rsdqc.tsv'
@@ -198,6 +199,12 @@ class Qcli(object):
                 mea_file, blank_effect_file
             ), shell=True, check=True)
             print(" - blank effect passed...")
+
+            run("{} blank-effect --mea-file={} --blank-effect-file={} --by-batch={}".format(
+                command_prefix,
+                mea_file, batch_blank_effect_file, True
+            ), shell=True, check=True)
+            print(" - blank effect by batch passed...")
 
             # rt shifts
             run("{} rt-shifts --mea-file={} --rt-shifts-file={}".format(
