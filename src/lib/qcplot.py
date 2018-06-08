@@ -55,7 +55,7 @@ class Qcplot:
                                       'Area',
                                       'Internal Standard corrected (ratio)',
                                       'QC corrected',
-                                      'Retention times'
+                                      'Retention time'
                                   )
         )
 
@@ -150,6 +150,15 @@ class Qcplot:
             name="rt",
             marker=dict(
                 color='rgba(0, 0, 0, 1.0)'
+            )), row, 1)
+
+        fig.append_trace(go.Scatter(
+            x=meas['aliquot'],
+            y=meas['rt_is'],
+            mode='markers',
+            name="rt internal standard",
+            marker=dict(
+                color='rgba(250, 0, 0, 1.0)'
             )), row, 1)
 
         vals = np.empty(len(meas['rt']))
