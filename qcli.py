@@ -123,6 +123,21 @@ class Qcli(object):
         # save results to file
         rsdrep.to_csv(rep_rsd_file, sep="\t", index=False, encoding='utf-8')
 
+    def internal_standard_rsd(self, qc_corrected_file, is_rsd_file, by_batch=False):
+        """ Calculate the Internal Standard RSD's ... """
+
+        # load measurements file
+        mea = Mea(qc_corrected_file)
+
+        # init calc class
+        qccalc = Qccalc(mea=mea)
+
+        # calculate qc rsd's
+        rsdis = qccalc.rsdis(by_batch=by_batch)
+
+        # save results to file
+        rsdis.to_csv(is_rsd_file, sep="\t", index=False, encoding='utf-8')
+
     def plot_compound(self, qc_corrected_file, compound, plot_location):
         """ plot an individual compound """
 
@@ -158,6 +173,8 @@ class Qcli(object):
         batch_qc_rsd_file = './data/batch_rsdqc.tsv'
         rep_rsd_file = './data/rsdrep.tsv'
         batch_rep_rsd_file = './data/batch_rsdrep.tsv'
+        is_rsd_file = './data/rsdis.tsv'
+        batch_is_rsd_file = './data/batch_rsdis.tsv'
         plot_location = './data/plots/'
 
         export_area_file = mea_file
@@ -245,6 +262,19 @@ class Qcli(object):
                 qc_corrected_file, batch_rep_rsd_file, True
             ), shell=True, check=True)
             print(" - rep-rsd by batch passed...")
+
+            # is rsd
+            run("{} internal-standard-rsd --qc-corrected-file={} --is-rsd-file={}".format(
+                command_prefix,
+                qc_corrected_file, is_rsd_file
+            ), shell=True, check=True)
+            print(" - is-rsd passed...")
+
+            run("{} internal-standard-rsd --qc-corrected-file={} --is-rsd-file={} --by-batch={}".format(
+                command_prefix,
+                qc_corrected_file, batch_is_rsd_file, True
+            ), shell=True, check=True)
+            print(" - is-rsd by batch passed...")
 
             # export_measurements (area)
             run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(

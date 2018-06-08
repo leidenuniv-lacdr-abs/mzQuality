@@ -114,6 +114,16 @@ class Mea:
         # return sorted compounds
         return compounds
 
+    # get the unique internal standards of all measurements
+    def get_internal_standards(self):
+
+        measurements = self.get_measurements()
+        internal_standards = measurements['compound_is'].unique()
+        internal_standards.sort()
+
+        # return sorted compounds
+        return internal_standards
+
     # get the unique samples of all measurements
     def get_samples(self, batch=False):
 
@@ -140,6 +150,18 @@ class Mea:
             measurements = self.get_measurements(drop_na=drop_na)
 
         return measurements[measurements['compound'] == compound]
+
+    # get the internal standard data
+    def get_internal_standard_data(self, internal_standard, batch=False, drop_na=True):
+
+        if batch:
+            measurements = self.get_batch_data(batch=batch, drop_na=drop_na)
+        else:
+            measurements = self.get_measurements(drop_na=drop_na)
+
+        internal_standard_data = measurements[measurements['compound_is'] == internal_standard]
+
+        return internal_standard_data.groupby('aliquot').first().reset_index()
 
     # provide data matrix with samples vs features
     def as_table(self, column='area', location='', include_is=False):

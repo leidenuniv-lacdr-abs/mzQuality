@@ -82,7 +82,7 @@ class Qccalc:
                 blank_effect['be'].append(be_compound)
                 blank_effect['be_perc'].append(be_compound_perc)
 
-        return pd.DataFrame(blank_effect)
+        return pd.DataFrame(blank_effect).round(decimals=2)
 
     def qc_correction(self):
 
@@ -125,7 +125,8 @@ class Qccalc:
                 # add column inter_median_qc_corrected with median corrected ratios
                 measurements.ix[compound_batch_index, 'inter_median_qc_corrected'] = measurements['ratio'] * qc_correct_factor
 
-        mea.set_measurements(measurements)
+        # TODO: this schouldn't be required
+        # mea.set_measurements(measurements)
 
         return measurements
 
@@ -226,9 +227,39 @@ class Qccalc:
                     rsdqc['rsdqc_is_corrected'].append(round(rsdqc_is_corrected, 2))
                     rsdqc['rsdqc_inter_median_qc_corrected'].append(round(rsdqc_inter_median_qc_corrected, 2))
 
-        rsdqc_df = pd.DataFrame(rsdqc)
+        return pd.DataFrame(rsdqc).round(decimals=2)
 
-        return rsdqc_df.round(decimals=2)
+    def rsdis(self, by_batch=False):
+
+        mea = self.get_mea()
+
+        rsdis = {}
+        rsdis['internal_standard'] = []
+        rsdis['rsdis_samples'] = []
+        rsdis['rsdis_qc'] = []
+
+        if by_batch:  # keep track of batch
+            rsdis['batch'] = []
+
+        for internal_standard in mea.get_internal_standards():
+            if by_batch:
+                for batch in mea.get_batches():
+                    batch_is_data = mea.get_internal_standard_data(internal_standard=internal_standard, batch=batch)
+
+                    if len(batch_is_data):
+                        rsdis['internal_standard'].append(internal_standard)
+                        rsdis['batch'].append(batch)
+                        rsdis['rsdis_samples'].append(100 * (batch_is_data[batch_is_data['type'] == 'sample']['area_is'].std() / batch_is_data[batch_is_data['type'] == 'sample']['area_is'].mean()))
+                        rsdis['rsdis_qc'].append(100 * (batch_is_data[batch_is_data['type'] == 'qc']['area_is'].std() / batch_is_data[batch_is_data['type'] == 'qc']['area_is'].mean()))
+            else:
+                is_data = mea.get_internal_standard_data(internal_standard=internal_standard)
+
+                rsdis['internal_standard'].append(internal_standard)
+                rsdis['rsdis_samples'].append(100 * (is_data[is_data['type'] == 'sample']['area_is'].std() / is_data[is_data['type'] == 'sample']['area_is'].mean()))
+                rsdis['rsdis_qc'].append(100 * (is_data[is_data['type'] == 'qc']['area_is'].std() / is_data[is_data['type'] == 'qc']['area_is'].mean()))
+
+        return pd.DataFrame(rsdis).round(decimals=2)
+
 
     def rt_shifts(self):
 
