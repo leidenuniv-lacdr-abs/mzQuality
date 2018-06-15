@@ -53,7 +53,7 @@ class Mea:
             # add ratio to Pandas DataFrame
             self.measurements['ratio'] = self.measurements['area'] / self.measurements['area_is']
 
-            # add position to Pandas DataFrame
+            # sort by batch and injection order
             self.measurements.sort_values(
                 ['batch', 'order'], ascending=[True, True], inplace=True
             )
