@@ -24,6 +24,16 @@ class Qcplot:
     def get_mea(self):
         return self.mea
 
+    # get color maps
+    def get_colormap(self, level=0):
+
+        colormap = {}
+        colormap[0] = ['#4CBB3E','#49B842','#46B546','#44B24B','#41AF4F','#3EAC54','#3CA958','#39A65D','#37A361','#34A066','#319D6A','#2F9A6E','#2C9773','#299477','#27917C','#248F80','#228C85','#1F8989','#1C868E','#1A8392','#178096','#147D9B','#127A9F','#0F77A4','#0D74A8','#0A71AD','#076EB1','#056BB6','#0268BA','#0066BF']
+        colormap[1] = ['#4CBB3E','#49B842','#46B546','#44B24B','#41AF4F','#3EAC54','#3CA958','#39A65D','#37A361','#34A066','#319D6A','#2F9A6E','#2C9773','#299477','#27917C','#248F80','#228C85','#1F8989','#1C868E','#1A8392','#178096','#147D9B','#127A9F','#0F77A4','#0D74A8','#0A71AD','#076EB1','#056BB6','#0268BA','#0066BF']
+        colormap[2] = ['#4CBB3E','#49B842','#46B546','#44B24B','#41AF4F','#3EAC54','#3CA958','#39A65D','#37A361','#34A066','#319D6A','#2F9A6E','#2C9773','#299477','#27917C','#248F80','#228C85','#1F8989','#1C868E','#1A8392','#178096','#147D9B','#127A9F','#0F77A4','#0D74A8','#0A71AD','#076EB1','#056BB6','#0268BA','#0066BF']
+
+        return list(reversed(colormap[level]))
+
 
     def plot_compound_qc_data(self, compound=False, location=''):
 
@@ -47,7 +57,7 @@ class Qcplot:
 
         row = 1
         fig = tools.make_subplots(rows=4, cols=1,
-                                  vertical_spacing=0.05,
+                                  vertical_spacing=0.1,
                                   print_grid=True,
                                   shared_xaxes=True,
                                   shared_yaxes=False,
@@ -81,14 +91,25 @@ class Qcplot:
             )
         ), row, 1)
 
+        colormap = self.get_colormap(level=0)
+        colormap = colormap[::int(len(colormap)/len(mea.get_batches())-1)]
         for batch, batch_sample_mea in sample_batch_measurements:
             fig.append_trace(go.Scatter(
                     x=batch_sample_mea['aliquot'],
                     y=batch_sample_mea['area'],
                     mode='markers',
-                    marker=dict(size=8),
+                    marker=dict(size=8, color=colormap[batch-1]),
                     name="batch {}".format(batch)
             ), row, 1)
+
+        fig.append_trace(go.Scatter(
+                x=sample_measurements['aliquot'],
+                y=sample_measurements['area_is'],
+                mode='markers',
+                marker=dict(size=8, color='#000'),
+                visible='legendonly',
+            name="internal standard"
+        ), row, 1)
 
         fig.append_trace(go.Scatter(
                 x=cal_measurements['aliquot'],
@@ -123,22 +144,26 @@ class Qcplot:
             )), row, 1)
 
         row += 1
+        colormap = self.get_colormap(level=1)
+        colormap = colormap[::int(len(colormap)/len(mea.get_batches())-1)]
         for batch, batch_sample_mea in sample_batch_measurements:
             fig.append_trace(go.Scatter(
                 x=batch_sample_mea['aliquot'],
                 y=batch_sample_mea['ratio'],
                 mode='markers',
-                marker=dict(size=8),
+                marker=dict(size=8, color=colormap[batch-1]),
                 name="ratios batch {}".format(batch)
             ), row, 1)
 
         row += 1
+        colormap = self.get_colormap(level=2)
+        colormap = colormap[::int(len(colormap)/len(mea.get_batches())-1)]
         for batch, batch_sample_mea in sample_batch_measurements:
             fig.append_trace(go.Scatter(
                 x=batch_sample_mea['aliquot'],
                 y=batch_sample_mea['inter_median_qc_corrected'],
                 mode='markers',
-                marker=dict(size=8),
+                marker=dict(size=8, color=colormap[batch-1]),
                 name="QC corrected batch {}".format(batch)
             ), row, 1)
 
