@@ -25,7 +25,7 @@ class Qcli(object):
         - qc_correction
         - rsd qc
         - rsd replicates
-        - plot compound information
+        - plot information compound(s)
         - export results as samples vs. compounds
     """
 
@@ -149,6 +149,19 @@ class Qcli(object):
 
         # plot the compound
         qcplot.plot_compound_qc_data(compound=compound, location=plot_location)
+
+    def plot_compounds(self, qc_corrected_file, plot_location):
+        """ plot a list of compounds """
+
+        # load measurements file
+        mea = Mea(mea_file=qc_corrected_file)
+
+        # init plot class
+        qcplot = Qcplot(mea=mea)
+
+        # plot the compound
+        for compound in mea.get_compounds():
+            qcplot.plot_compound_qc_data(compound=compound, location=plot_location)
 
     def export_measurements(self, file, column, export_location, include_is=False):
         """ exports data as samples vs compounds"""
@@ -298,13 +311,21 @@ class Qcli(object):
             print(" - export qc_inter passed...")
 
             # plot (a limited number of) compounds
-            print(" + plot compounds:")
+            print(" + plot compound:")
             for compound in compounds:
                 run("{} plot_compound --qc-corrected-file={} --compound={} --plot-location={}".format(
                     command_prefix,
                     qc_corrected_file, compound, plot_location
                 ), shell=True, check=True)
                 print("  - plot compound {} passed...".format(compound))
+
+            # plot a list of compounds
+            print(" + plot all compound(s)")
+            run("{} plot_compounds --qc-corrected-file={} --plot-location={}".format(
+                command_prefix,
+                qc_corrected_file, plot_location
+            ), shell=True, check=True)
+            print("  - plot compounds passed...")
 
         except:
             print("Unexpected error:", sys.exc_info()[0])

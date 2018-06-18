@@ -58,7 +58,7 @@ class Qcplot:
         row = 1
         fig = tools.make_subplots(rows=3, cols=1,
                                   vertical_spacing=0.025,
-                                  print_grid=True,
+                                  print_grid=False,
                                   shared_xaxes=True,
                                   shared_yaxes=False,
                                   subplot_titles=(
