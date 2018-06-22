@@ -7,6 +7,8 @@ import fire
 import json
 import time
 import zipfile
+import tempfile
+import shutil
 import datetime
 from subprocess import run, Popen, PIPE
 from src.lib.mea import Mea
@@ -152,7 +154,7 @@ class Qcli(object):
         # plot the compound
         qcplot.plot_compound_qc_data(compound=compound, location=plot_location)
 
-    def plot_compounds(self, qc_corrected_file, plot_location, zipped=False):
+    def plot_compounds(self, qc_corrected_file, plot_location):
         """ plot a list of compounds """
 
         # load measurements file
@@ -165,16 +167,29 @@ class Qcli(object):
         for compound in mea.get_compounds():
             qcplot.plot_compound_qc_data(compound=compound, location=plot_location)
 
-        if zipped:
-            # zip all files from plots list
-            zip_file = "{}/report.zip".format(plot_location)
+    def plot_compounds_zipped(self, qc_corrected_file, zip_file):
+        """ plot a list of compounds and store them as a zip file """
+
+        # load measurements file
+        mea = Mea(mea_file=qc_corrected_file)
+
+        # init plot class
+        qcplot = Qcplot(mea=mea)
+
+        # plot the compound
+        with tempfile.TemporaryDirectory() as tmpdir:
+            for compound in mea.get_compounds():
+                qcplot.plot_compound_qc_data(compound=compound, location=tmpdir)
 
             zipf = zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED)
-            for root, dirs, files in os.walk(plot_location):
+            for root, dirs, files in os.walk(tmpdir):
                 for file in files:
                     if not os.path.isdir(file) and file.split('.')[-1].lower() == 'html':
-                        zipf.write(os.path.join(root, file))
+                        zipf.write(os.path.join(root, file), file)
             zipf.close()
+
+            # clean up plots after they are zipped
+            shutil.rmtree(tmpdir)
 
     def export_measurements(self, file, column, export_location, include_is=False):
         """ exports data as samples vs compounds"""
@@ -202,6 +217,7 @@ class Qcli(object):
         is_rsd_file = './data/rsdis.tsv'
         batch_is_rsd_file = './data/batch_rsdis.tsv'
         plot_location = './data/plots/'
+        zip_file = './data/plots.zip'
 
         export_area_file = mea_file
         export_area_column = 'area'
@@ -334,16 +350,16 @@ class Qcli(object):
 
             # plot all compounds
             print(" + plot all compound(s)")
-            run("{} plot-compounds --qc-corrected-file={} --plot-location={} --zipped={}".format(
+            run("{} plot-compounds --qc-corrected-file={} --plot-location={}".format(
                 command_prefix,
-                qc_corrected_file, plot_location, False
+                qc_corrected_file, plot_location
             ), shell=True, check=True)
             print("  - plot compounds passed...")
 
             print(" + plot all compound(s), and zip them")
-            run("{} plot-compounds --qc-corrected-file={} --plot-location={} --zipped={}".format(
+            run("{} plot_compounds_zipped --qc-corrected-file={} --zip-file={}".format(
                 command_prefix,
-                qc_corrected_file, plot_location, True
+                qc_corrected_file, zip_file
             ), shell=True, check=True)
             print("  - plot compounds (zipped) passed...")
 
