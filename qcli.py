@@ -6,6 +6,7 @@ import sys
 import fire
 import json
 import time
+import zipfile
 import datetime
 from subprocess import run, Popen, PIPE
 from src.lib.mea import Mea
@@ -25,6 +26,7 @@ class Qcli(object):
         - qc_correction
         - rsd qc
         - rsd replicates
+        - rsd internal standard(s)
         - plot information compound(s)
         - export results as samples vs. compounds
     """
@@ -150,7 +152,7 @@ class Qcli(object):
         # plot the compound
         qcplot.plot_compound_qc_data(compound=compound, location=plot_location)
 
-    def plot_compounds(self, qc_corrected_file, plot_location):
+    def plot_compounds(self, qc_corrected_file, plot_location, zipped=False):
         """ plot a list of compounds """
 
         # load measurements file
@@ -162,6 +164,17 @@ class Qcli(object):
         # plot the compound
         for compound in mea.get_compounds():
             qcplot.plot_compound_qc_data(compound=compound, location=plot_location)
+
+        if zipped:
+            # zip all files from plots list
+            zip_file = "{}/report.zip".format(plot_location)
+
+            zipf = zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED)
+            for root, dirs, files in os.walk(plot_location):
+                for file in files:
+                    if not os.path.isdir(file) and file.split('.')[-1].lower() == 'html':
+                        zipf.write(os.path.join(root, file))
+            zipf.close()
 
     def export_measurements(self, file, column, export_location, include_is=False):
         """ exports data as samples vs compounds"""
@@ -290,21 +303,21 @@ class Qcli(object):
             print(" - is-rsd by batch passed...")
 
             # export_measurements (area)
-            run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
+            run("{} export-measurements --file={} --column={} --export_location={} --include_is={}".format(
                 command_prefix,
                 export_area_file, export_area_column, export_area_location, export_area_is
             ), shell=True, check=True)
             print(" - export area's passed...")
 
             # export_measurements (ratio)
-            run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
+            run("{} export-measurements --file={} --column={} --export_location={} --include_is={}".format(
                 command_prefix,
                 export_ratio_file, export_ratio_column, export_ratio_location, export_ratio_is
             ), shell=True, check=True)
             print(" - export ratio's passed...")
 
             # export_measurements (qc_corrected)
-            run("{} export_measurements --file={} --column={} --export_location={} --include_is={}".format(
+            run("{} export-measurements --file={} --column={} --export_location={} --include_is={}".format(
                 command_prefix,
                 export_qc_inter_file, export_qc_inter_column, export_qc_inter_location, export_qc_inter_is
             ), shell=True, check=True)
@@ -313,19 +326,26 @@ class Qcli(object):
             # plot (a limited number of) compounds
             print(" + plot compound:")
             for compound in compounds:
-                run("{} plot_compound --qc-corrected-file={} --compound={} --plot-location={}".format(
+                run("{} plot-compound --qc-corrected-file={} --compound={} --plot-location={}".format(
                     command_prefix,
                     qc_corrected_file, compound, plot_location
                 ), shell=True, check=True)
                 print("  - plot compound {} passed...".format(compound))
 
-            # plot a list of compounds
+            # plot all compounds
             print(" + plot all compound(s)")
-            run("{} plot_compounds --qc-corrected-file={} --plot-location={}".format(
+            run("{} plot-compounds --qc-corrected-file={} --plot-location={} --zipped={}".format(
                 command_prefix,
-                qc_corrected_file, plot_location
+                qc_corrected_file, plot_location, False
             ), shell=True, check=True)
             print("  - plot compounds passed...")
+
+            print(" + plot all compound(s), and zip them")
+            run("{} plot-compounds --qc-corrected-file={} --plot-location={} --zipped={}".format(
+                command_prefix,
+                qc_corrected_file, plot_location, True
+            ), shell=True, check=True)
+            print("  - plot compounds (zipped) passed...")
 
         except:
             print("Unexpected error:", sys.exc_info()[0])

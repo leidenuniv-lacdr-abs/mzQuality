@@ -200,6 +200,7 @@ class Qcplot:
                 width=1)
         ), row, 1)
 
-        plot(fig, filename="{}/{}.html".format(location, compound), auto_open=False, show_link=False)
+        plot_location = "{}/{}.html".format(location, compound)
+        plot(fig, filename=plot_location, auto_open=False, show_link=False)
 
-        return True
+        return plot_location
