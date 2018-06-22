@@ -8,7 +8,6 @@ import json
 import time
 import zipfile
 import tempfile
-import shutil
 import datetime
 from subprocess import run, Popen, PIPE
 from src.lib.mea import Mea
@@ -187,9 +186,6 @@ class Qcli(object):
                     if not os.path.isdir(file) and file.split('.')[-1].lower() == 'html':
                         zipf.write(os.path.join(root, file), file)
             zipf.close()
-
-            # clean up plots after they are zipped
-            shutil.rmtree(tmpdir)
 
     def export_measurements(self, file, column, export_location, include_is=False):
         """ exports data as samples vs compounds"""
