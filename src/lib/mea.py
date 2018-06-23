@@ -239,7 +239,7 @@ class Mea:
     # correct compound names in measurements
     def fix_compound_name(self, name):
 
-        changelist = {' ': '_', '*': '_star', '%': '_pct', '&': '_and', ',': '_'}
+        changelist = {'/': '_', '\\': '_', ' ': '_', '*': '_star', '%': '_pct', '&': '_and', ',': '_'}
         changelist = str.maketrans(changelist)
         name = str(name).translate(changelist)
         return name
