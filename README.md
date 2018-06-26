@@ -26,12 +26,11 @@
  This reports the relative standard deviation (RSD) of replicated samples. Replicated samples are included to assess drift of the mass spec during a batch. The denominator of the RSD is the absolute value of the mean, so the RSD will always be positive.  
   
 7) RSD of internal standards (rsd_is)  
- This reports the relative standard deviation (RSD) of internal standards. The internal standards are used to calculate the reported ratio of a compound; also called the internal standard corrected intensity. The denominator of the RSD is the absolute value of the mean, so the RSD will always be positive.  
-  Script name: qccalc.py
+ This reports the relative standard deviation (RSD) of internal standards. The internal standards are used to calculate the reported ratio of a compound; also called the internal standard corrected intensity. The denominator of the RSD is the absolute value of the mean, so the RSD will always be positive.
   
 8) Plot the information of compound(s)  
   This provides a plot showing the uncorrected area per compound, the internal standard and qc corrected ratio per compound and the retention time per compound. These plots allow the assessment of quality per project.  
 
 9) Export results as samples vs. compounds  
-  A dataframe of samples (rows) vs. compounds (columns) is exported as a tab separated file named **combined.tsv**.
+  A dataframe of samples (rows) vs. compounds (columns) is exported as a tab separated file.
 
