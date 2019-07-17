@@ -1,4 +1,4 @@
-pandas==0.22.0
-plotly==2.5.1
-cufflinks==0.12.1
-fire==0.1.3
+pandas
+plotly==2.7.0
+cufflinks==0.13.0
+fire
